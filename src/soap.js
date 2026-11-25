@@ -1,6 +1,7 @@
 import { SaxesParser } from "saxes";
 
-const soap = "http://schemas.xmlsoap.org/soap/envelope/";
+const soap11 = "http://schemas.xmlsoap.org/soap/envelope/";
+const soap12 = "http://www.w3.org/2003/05/soap-envelope";
 const notificationPath = "schemas.microsoft.com/TeamFoundation/2005/06/Services/Notification/03";
 const namespaces = new Set(["http://" + notificationPath, "https://" + notificationPath]);
 
@@ -46,7 +47,7 @@ export function parseNotification(xml) {
   const root = parseXml(xml);
   const body = child(root, "Body");
   const operation = body?.children[0];
-  if (root.name !== "Envelope" || root.uri !== soap || body?.uri !== soap ||
+  if (root.name !== "Envelope" || (root.uri !== soap11 && root.uri !== soap12) || body?.uri !== root.uri ||
       body.children.length !== 1 || operation.name !== "Notify" || !namespaces.has(operation.uri)) {
     throw new Error("Expected SOAP Notify");
   }
@@ -59,21 +60,24 @@ export function parseNotification(xml) {
       if (node) collectFields(node, fields);
     }
     notification.id = fields.get("system.id") ?? value(event, "WorkItemId");
-    notification.title = fields.get("system.title") ?? value(event, "Title");
+    notification.title = fields.get("system.title") ?? value(event, "WorkItemTitle") ?? value(event, "Title");
     const link = value(event, "DisplayUrl");
     if (link && URL.canParse(link) && ["https:", "http:"].includes(new URL(link).protocol)) {
       notification.url = link;
     }
   }
-  return { namespace: operation.uri, notification };
+  return { namespace: operation.uri, envelope: root.uri, notification };
 }
 
-export function soapResponse(namespace, delivered) {
+export function soapResponse({ namespace, envelope }, delivered) {
+  const fault = envelope === soap12
+    ? '<s:Fault><s:Code><s:Value>s:Receiver</s:Value></s:Code><s:Reason><s:Text xml:lang="en">All channel attempts failed</s:Text></s:Reason></s:Fault>'
+    : '<s:Fault><faultcode>s:Server</faultcode><faultstring>All channel attempts failed</faultstring></s:Fault>';
   const content = delivered
     ? '<NotifyResponse xmlns="' + namespace + '"/>'
-    : '<s:Fault><faultcode>s:Server</faultcode><faultstring>All channel attempts failed</faultstring></s:Fault>';
-  return new Response('<s:Envelope xmlns:s="' + soap + '"><s:Body>' + content + '</s:Body></s:Envelope>', {
+    : fault;
+  return new Response('<s:Envelope xmlns:s="' + envelope + '"><s:Body>' + content + '</s:Body></s:Envelope>', {
     status: delivered ? 200 : 500,
-    headers: { "Content-Type": "text/xml; charset=utf-8" }
+    headers: { "Content-Type": envelope === soap12 ? "application/soap+xml; charset=utf-8" : "text/xml; charset=utf-8" }
   });
 }

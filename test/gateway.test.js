@@ -82,3 +82,17 @@ test("rejects unauthenticated, malformed, and oversized requests before delivery
   assert.equal((await run(request("a".repeat(1024 * 1024)))).status, 413);
   assert.equal(sends, 0);
 });
+
+test("handles Azure DevOps Services SOAP 1.2 requests and replies in the same version", async () => {
+  const uri = "http://www.w3.org/2003/05/soap-envelope";
+  const payload = (await request().text()).replace("http://schemas.xmlsoap.org/soap/envelope/", uri);
+  for (const status of [200, 500]) {
+    const incoming = new Request(request().url, { method: "POST", body: payload });
+    const response = await handle(incoming, env, async () => Response.json({ ok: status === 200 }, { status }), () => {});
+    assert.equal(response.status, status);
+    assert.match(response.headers.get("content-type"), /application\/soap\+xml/);
+    const body = await response.text();
+    assert.ok(body.includes(uri));
+    assert.ok(body.includes(status === 200 ? "NotifyResponse" : "s:Receiver"));
+  }
+});

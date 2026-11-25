@@ -39,10 +39,10 @@ export async function handle(request, env, send = fetch, log = console.log) {
   if (!Array.isArray(env.CHANNELS) || !env.CHANNELS.length ||
       !env.CHANNELS.every(channel => typeof channel?.name === "string" && channel.name.length)) {
     log({ outcome: "failed", reason: "invalid_channel_list" });
-    return soapResponse(parsed.namespace, false);
+    return soapResponse(parsed, false);
   }
   const delivered = await deliver(env.CHANNELS, env, parsed.notification, send, log);
-  return soapResponse(parsed.namespace, delivered);
+  return soapResponse(parsed, delivered);
 }
 
 export default { fetch: (request, env) => handle(request, env) };

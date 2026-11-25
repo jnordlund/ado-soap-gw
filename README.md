@@ -47,4 +47,4 @@ The Worker makes one attempt per channel in parallel, with a five-second timeout
 
 A successful acknowledgement can therefore include a missed channel. Check the per-channel logs for its name, outcome and failure reason. The gateway has no durable queue or automatic retries.
 
-The parser accepts UTF-8 SOAP 1.1 `Notify` requests up to 1 MiB, with the event XML encoded as text inside `eventXml`. Local tests cover synthetic envelopes. Compatibility with a live Azure DevOps Services subscription still needs verification.
+The parser accepts UTF-8 SOAP 1.1 and 1.2 `Notify` requests up to 1 MiB, with the event XML encoded as text inside `eventXml`. A live Azure DevOps Services work-item creation subscription sent SOAP 1.2. The receiving webhook confirmed the work item ID and exact title. Telegram delivery is covered by local tests.
