@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 *.md
+!/README.md
 /AGENTS.md
 docs/agents/
 docs/agents/*
