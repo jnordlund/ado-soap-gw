@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ado-soap-gw",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-11-25",
+  "observability": {
+    "logs": { "enabled": true, "invocation_logs": false },
+    "traces": { "enabled": false }
+  },
+  "vars": {
+    "CHANNELS": [
+      { "name": "telegram", "type": "telegram", "chatId": "REPLACE_WITH_CHAT_ID", "tokenSecret": "BOT_TOKEN" },
+      { "name": "work-items", "type": "webhook", "urlSecret": "WEBHOOK_URL",
+        "header": { "name": "Authorization", "valueSecret": "WEBHOOK_AUTH" } }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "ado-soap-gw",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "saxes": "^6.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.168.0"
+  }
+}
